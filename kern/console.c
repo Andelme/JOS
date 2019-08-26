@@ -203,9 +203,9 @@ cga_putc(int c)
 
 	/* move that little blinky thing */
 	outb(addr_6845, 14);
-	outb(addr_6845 + 1, crt_pos >> 8);
+	outb(addr_6845 + 1, (uint8_t) ((unsigned) crt_pos >> 8U));
 	outb(addr_6845, 15);
-	outb(addr_6845 + 1, crt_pos);
+	outb(addr_6845 + 1, (uint8_t) crt_pos);
 }
 
 
