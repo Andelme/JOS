@@ -9,17 +9,17 @@ OBJDIRS += boot
 
 BOOT_OBJS := $(OBJDIR)/boot/boot.o $(OBJDIR)/boot/main.o
 
-$(OBJDIR)/boot/%.o: boot/%.c
+$(OBJDIR)/boot/%.o: boot/%.c $(OBJDIR)/.vars.KERN_CFLAGS
 	@echo + $(CC) -Os $<
 	@mkdir -p $(@D)
 	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -Os -c -o $@ $<
 
-$(OBJDIR)/boot/%.o: boot/%.S
+$(OBJDIR)/boot/%.o: boot/%.S $(OBJDIR)/.vars.KERN_CFLAGS
 	@echo + as $<
 	@mkdir -p $(@D)
 	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -c -o $@ $<
 
-$(OBJDIR)/boot/main.o: boot/main.c
+$(OBJDIR)/boot/main.o: boot/main.c $(OBJDIR)/.vars.KERN_CFLAGS
 	@echo + $(CC) -Os $<
 	$(V)$(CC) -nostdinc $(KERN_CFLAGS) -Os -c -o $(OBJDIR)/boot/main.o boot/main.c
 

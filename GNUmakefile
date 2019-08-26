@@ -23,23 +23,24 @@ LABSETUP ?= ./
 
 TOP = .
 
-CFLAGS	+= -pipe -m32 -fno-pic
+CFLAGS        ?=
+EXTRA_CFLAGS  ?=
+NATIVE_CFLAGS ?=
 
 ifdef JOSLLVM
 
-CC	:= clang
-AS	:= llvm-as
-AR	:= llvm-ar
-LD	:= ld.lld
-OBJCOPY	:= llvm/gnu-objcopy
-OBJDUMP	:= llvm-objdump
-NM	:= llvm-nm
+CC            := clang
+AS            := llvm-as
+AR            := llvm-ar
+LD            := ld.lld
+OBJCOPY       := llvm/gnu-objcopy
+OBJDUMP       := llvm-objdump
+NM            := llvm-nm
 
-CFLAGS	+= -target i386-gnu-linux -march=pentium2
+CFLAGS        += -target i386-gnu-linux -march=pentium2 -pipe -DJOS_LLVM=1
+EXTRA_CFLAGS  += -Wno-self-assign -Wno-format-nonliteral -Wno-address-of-packed-member
 
-EXTRA_CFLAGS	:= $(EXTRA_CFLAGS) -Wno-self-assign -Wno-format-nonliteral -Wno-address-of-packed-member
-
-GCC_LIB := $(shell $(CC) $(CFLAGS) -print-resource-dir)/lib/j*s/libclang_rt.builtins-i386.a
+GCC_LIB       := $(shell $(CC) $(CFLAGS) -print-resource-dir)/lib/j*s/libclang_rt.builtins-i386.a
 
 else
 
@@ -73,24 +74,28 @@ GCCPREFIX := $(shell if i386-jos-elf-objdump -i 2>&1 | grep '^elf32-i386$$' >/de
 	echo "***" 1>&2; exit 1; fi)
 endif
 
-CC	:= $(GCCPREFIX)gcc
-AS	:= $(GCCPREFIX)as
-AR	:= $(GCCPREFIX)ar
-LD	:= $(GCCPREFIX)ld
-OBJCOPY	:= $(GCCPREFIX)objcopy
-OBJDUMP	:= $(GCCPREFIX)objdump
-NM	:= $(GCCPREFIX)nm
+CC             := $(GCCPREFIX)gcc
+AS             := $(GCCPREFIX)as
+AR             := $(GCCPREFIX)ar
+LD             := $(GCCPREFIX)ld
+OBJCOPY        := $(GCCPREFIX)objcopy
+OBJDUMP        := $(GCCPREFIX)objdump
+NM             := $(GCCPREFIX)nm
 
+CFLAGS         += -fno-pic -pipe
 # -fno-tree-ch prevented gcc from sometimes reordering read_ebp() before
 # mon_backtrace()'s function prologue on gcc version: (Debian 4.7.2-5) 4.7.2
-EXTRA_CFLAGS	:= $(EXTRA_CFLAGS) -Wno-unused-but-set-variable -gstabs -fno-tree-ch
+EXTRA_CFLAGS   += -Wno-unused-but-set-variable -gstabs -fno-tree-ch
 
-GCC_LIB := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
+GCC_LIB        := $(shell $(CC) $(CFLAGS) -print-libgcc-file-name)
 
 endif
 
 # Native commands
-PERL	:= perl
+NCC           := gcc
+NATIVE_CFLAGS += -pipe $(DEFS) $(LABDEFS) -I$(TOP) -MD -Wall
+TAR           := gtar
+PERL          := perl
 
 # try to infer the correct QEMU
 ifndef QEMU
@@ -114,12 +119,9 @@ GDBPORT	:= $(shell expr `id -u` % 5000 + 25000)
 # Compiler flags
 # -fno-builtin is required to avoid refs to undefined functions in the kernel.
 # Only optimize to -O1 to discourage inlining, which complicates backtraces.
-CFLAGS := $(CFLAGS) $(DEFS) $(LABDEFS) -O1 -fno-builtin -I$(TOP) -MD
-CFLAGS += -fno-omit-frame-pointer
+CFLAGS += $(DEFS) $(LABDEFS) -O1 -I$(TOP) -MD
+CFLAGS += -m32 -fno-builtin -fno-omit-frame-pointer -fno-stack-protector
 CFLAGS += -Wall -Wformat=2 -Wno-unused-function -Werror
-
-# Add -fno-stack-protector if the option exists.
-CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
 CFLAGS += $(EXTRA_CFLAGS)
 
 # Common linker flags
