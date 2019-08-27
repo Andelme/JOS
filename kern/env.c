@@ -179,7 +179,7 @@ env_setup_vm(struct Env *e)
 	//	(except at UVPT, which we've set below).
 	//	See inc/memlayout.h for permissions and layout.
 	//	Can you use kern_pgdir as a template?  Hint: Yes.
-	//	(Make sure you got the permissions right in Lab 2.)
+	//	(Make sure you got the permissions right in Lab 7.)
 	//    - The initial VA below UTOP is empty.
 	//    - You do not need to make any more calls to page_alloc.
 	//    - Note: In general, pp_ref is not maintained for
