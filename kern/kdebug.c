@@ -212,9 +212,17 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 uintptr_t
 find_function(const char * const fname)
 {
-	// const struct Stab *stabs = __STAB_BEGIN__, *stab_end = __STAB_END__;
-	// const char *stabstr = __STABSTR_BEGIN__, *stabstr_end = __STABSTR_END__;
-	//LAB 3: Your code here.
+	const struct Stab *stabs = __STAB_BEGIN__, *stab_end = __STAB_END__;
+	const char *stabstr = __STABSTR_BEGIN__;
+	size_t flen;
 
+	for (; stabs < stab_end; ++stabs) {
+		if (stabs->n_type == N_FUN) {
+			flen = strfind(stabstr + stabs->n_strx, ':') - stabstr - stabs->n_strx;
+			if (strlen(fname) == flen && !strncmp(fname, stabstr + stabs->n_strx, flen)) {
+				return stabs->n_value;
+			}
+		}
+	}
 	return 0;
 }
