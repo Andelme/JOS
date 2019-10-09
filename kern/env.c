@@ -205,7 +205,7 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 	e->env_tf.tf_es = GD_KD | 0;
 	e->env_tf.tf_ss = GD_KD | 0;
 	e->env_tf.tf_cs = GD_KT | 0;
-	e->env_tf.tf_esp = 0x210000 + e->env_id * 2 * PGSIZE;
+	e->env_tf.tf_esp = 0x210000 + (e - envs) * 2 * PGSIZE;
 #else
 #endif
 	// You will set e->env_tf.tf_eip later.
