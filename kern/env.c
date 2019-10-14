@@ -120,9 +120,11 @@ envid2env(envid_t envid, struct Env **env_store, bool checkperm)
 void
 env_init(void)
 {
+
 	// Set up envs array
+	int i = 0;
 	env_free_list = NULL;
-    for (int i = NENV - 1; i >= 0; --i) {
+    for (i = NENV - 1; i >= 0; --i) {
         envs[i].env_status = ENV_FREE;
         envs[i].env_id = 0;
         envs[i].env_link = env_free_list;
@@ -237,7 +239,7 @@ bind_functions(struct Env *e, struct Elf *elf)
 	symtab = NULL;
 	esymtab = NULL;
 	shstrtab = NULL;
-
+    //find tabs
 	shstrtab = (char *) ((uint8_t *) elf + sh[elf->e_shstrndx].sh_offset);
 
 	for (; sh < esh; ++sh) {

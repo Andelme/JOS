@@ -24,11 +24,12 @@ sched_yield(void)
 	// If there are no runnable environments,
 	// simply drop through to the code
 	// below to halt the cpu.
+	int i = 0;
     if (curenv == NULL) {
         env_run(&envs[0]);
     } else {
         int idx = ENVX(curenv->env_id);
-        for (int i = 1; i < NENV; ++i) {
+        for (i = 1; i < NENV; ++i) {
             idx = (idx + 1) % NENV;
             if (envs[idx].env_status == ENV_RUNNABLE) {
                 env_run(&envs[idx]);    
