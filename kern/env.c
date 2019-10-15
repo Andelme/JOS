@@ -122,7 +122,7 @@ env_init(void)
 {
 
 	// Set up envs array
-	int i = 0;
+	int i;
 	env_free_list = NULL;
     for (i = NENV - 1; i >= 0; --i) {
         envs[i].env_status = ENV_FREE;
@@ -238,12 +238,12 @@ bind_functions(struct Env *e, struct Elf *elf)
 	esh = sh + elf->e_shnum;
 	symtab = NULL;
 	esymtab = NULL;
-	shstrtab = NULL;
+	strtab = NULL;
     //find tabs
 	shstrtab = (char *) ((uint8_t *) elf + sh[elf->e_shstrndx].sh_offset);
 
 	for (; sh < esh; ++sh) {
-		if (sh->sh_type == ELF_SHT_SYMTAB && !strcmp(".symtab", shstrtab + sh->sh_name)) {
+		if (sh->sh_type == ELF_SHT_SYMTAB) {
 			symtab = (struct Elf32_Sym *) ((uint8_t *) elf + sh->sh_offset);
 			esymtab = (struct Elf32_Sym *) ((uint8_t *) symtab + sh->sh_size);
 		} else if (sh->sh_type == ELF_SHT_STRTAB && !strcmp(".strtab", shstrtab + sh->sh_name)) {
