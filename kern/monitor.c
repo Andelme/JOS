@@ -29,6 +29,7 @@ static struct Command commands[] = {
 	{ "backtrace", "Display stack backtrace", mon_backtrace },
     { "timer_start", "Start timer", mon_timer_start },
     { "timer_stop", "Stop timer", mon_timer_stop },
+    { "pplist", "Display physical pages", mon_pplist }
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -93,6 +94,26 @@ mon_timer_stop(int argc, char **argv, struct Trapframe *tf)
 {
     timer_stop();
     return 0;
+}
+
+int
+mon_pplist(int argc, char **argv, struct Trapframe *tf)
+{
+	size_t i;
+	int is_cur_free;
+
+	for (i = 1; i <= npages; ++i) {
+        is_cur_free = is_page_free(&pages[i - 1]);
+		cprintf("%d", i);
+		if (i < npages && !(is_page_free(&pages[i]) ^ is_cur_free)) {
+			while (i < npages && !(is_page_free(&pages[i]) ^ is_cur_free)) {
+                ++i;
+            }
+			cprintf("..%d", i);
+		}
+		cprintf(!is_cur_free ? " FREE\n" : " ALLOCATED\n");
+	}
+	return 0;
 }
 /***** Kernel monitor command interpreter *****/
 
