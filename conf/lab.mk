@@ -1,0 +1,2 @@
+LAB=6
+CONFIG_KSPACE=n

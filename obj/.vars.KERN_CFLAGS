@@ -1,0 +1,1 @@
+ -target i386-gnu-linux -march=pentium2 -pipe -DJOS_LLVM=1   -O1 -I. -MD -m32 -fno-builtin -fno-omit-frame-pointer -fno-stack-protector -Wall -Wformat=2 -Wno-unused-function -Werror  -Wno-self-assign -Wno-format-nonliteral -Wno-address-of-packed-member -DSAN_ENABLE_KASAN=1 -DJOS_KERNEL
