@@ -140,6 +140,12 @@ mem_init(void)
 	// Find out how much memory the machine has (npages & npages_basemem).
 	i386_detect_memory();
 
+#ifdef SANITIZE_SHADOW_BASE
+	// Unpoison kernel and IO-hole memory!
+	cprintf("Kernel and IO-hole unpoisoned!\n");
+	platform_asan_unpoison(KADDR(IOPHYSMEM), (uint32_t) (boot_alloc(0) - KADDR(IOPHYSMEM)));
+#endif
+
 	// Remove this line when you're ready to test this function.
 	//panic("mem_init: This function is not finished\n");
 
@@ -178,7 +184,7 @@ mem_init(void)
 	check_page_alloc();
 }
 
-// --------------------------------------------------------------
+// -------------------------------------------------:-------------
 // Tracking of physical pages.
 // The 'pages' array has one 'struct PageInfo' entry per physical page.
 // Pages are reference counted, and free pages are kept on a linked list.
@@ -210,7 +216,6 @@ page_init(void)
 	// Change the code to reflect this.
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
-    
     size_t i;
     for (i = 1; i < npages; ++i) {
         if (i >= PGNUM(IOPHYSMEM) && i < PGNUM(PADDR(boot_alloc(0)))) {
@@ -220,16 +225,6 @@ page_init(void)
 		pages[i].pp_link = page_free_list;
 		page_free_list = &pages[i];
     }
-	/*for (i = 1; i < npages_basemem; ++i) {
-		pages[i].pp_ref = 0;
-		pages[i].pp_link = page_free_list;
-		page_free_list = &pages[i];
-	}
-	for (i = PGNUM(PADDR(boot_alloc(0))); i < npages; ++i) {
-		pages[i].pp_ref = 0;
-		pages[i].pp_link = page_free_list;
-		page_free_list = &pages[i];
-	}*/
 }
 
 //

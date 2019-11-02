@@ -26,7 +26,7 @@ readline(const char *prompt)
 		} else if (c >= ' ' && i < BUFLEN-1) {
 			if (echoing)
 				cputchar(c);
-			buf[i++] = c;
+			buf[i++] = (char) c;
 		} else if (c == '\n' || c == '\r') {
 			if (echoing)
 				cputchar('\n');
