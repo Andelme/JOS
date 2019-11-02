@@ -13,7 +13,6 @@ extern char bootstacktop[], bootstack[];
 
 extern struct PageInfo *pages;
 extern size_t npages;
-extern struct PageInfo *page_free_list_head;
 
 extern pde_t *kern_pgdir;
 
@@ -63,6 +62,8 @@ void	page_decref(struct PageInfo *pp);
 
 void	tlb_invalidate(pde_t *pgdir, void *va);
 
+int is_page_free(struct PageInfo *pp);
+
 static inline physaddr_t
 page2pa(struct PageInfo *pp)
 {
@@ -81,12 +82,6 @@ static inline void*
 page2kva(struct PageInfo *pp)
 {
 	return KADDR(page2pa(pp));
-}
-
-static inline int
-is_page_free(struct PageInfo *pp)
-{
-	return (pp->pp_link || (pp == page_free_list_head)) ? 0 : -1;
 }
 
 pte_t *pgdir_walk(pde_t *pgdir, const void *va, int create);

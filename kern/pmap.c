@@ -24,11 +24,15 @@ static size_t npages_basemem;	// Amount of base memory (in pages)
 pde_t *kern_pgdir;		// Kernel's initial page directory
 struct PageInfo *pages;		// Physical page state array
 static struct PageInfo *page_free_list;	// Free list of physical pages
-struct PageInfo *page_free_list_head;
 
 // --------------------------------------------------------------
 // Detect machine's physical memory setup.
 // --------------------------------------------------------------
+int
+is_page_free(struct PageInfo *pp)
+{
+	return ((pp == page_free_list) || pp->pp_link) ? 0 : -1;
+}
 
 static int
 nvram_read(int r)
@@ -118,7 +122,6 @@ boot_alloc(uint32_t n)
 	// Unpoison the result since it is now allocated.
 	platform_asan_unpoison(result, n);
 #endif
-
 	return result;
 }
 
@@ -207,9 +210,17 @@ page_init(void)
 	// Change the code to reflect this.
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
-	size_t i;
-	page_free_list_head = &pages[1];
-	for (i = 1; i < npages_basemem; ++i) {
+    
+    size_t i;
+    for (i = 1; i < npages; ++i) {
+        if (i >= PGNUM(IOPHYSMEM) && i < PGNUM(PADDR(boot_alloc(0)))) {
+            continue;
+        }
+        pages[i].pp_ref = 0;
+		pages[i].pp_link = page_free_list;
+		page_free_list = &pages[i];
+    }
+	/*for (i = 1; i < npages_basemem; ++i) {
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = page_free_list;
 		page_free_list = &pages[i];
@@ -218,8 +229,7 @@ page_init(void)
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = page_free_list;
 		page_free_list = &pages[i];
-	}
-
+	}*/
 }
 
 //
@@ -239,14 +249,11 @@ page_alloc(int alloc_flags)
 {
     struct PageInfo *p;
 
-	p = page_free_list;
 	if (!page_free_list) {
         return NULL;
     }
+    p = page_free_list;
 	page_free_list = page_free_list->pp_link;
-	if (!page_free_list) {
-		page_free_list_head = NULL;
-	}
 	p->pp_link = NULL;
 	if (alloc_flags & ALLOC_ZERO) {
         memset(page2kva(p), 0, PGSIZE);
@@ -274,9 +281,6 @@ page_free(struct PageInfo *pp)
 	}
 	pp->pp_link = page_free_list;
 	page_free_list = pp;
-	if (!page_free_list_head) {
-		page_free_list_head = pp;
-	}
 }
 
 //
@@ -515,7 +519,6 @@ check_page_alloc(void)
 	assert((pp0 = page_alloc(0)));
 	assert((pp1 = page_alloc(0)));
 	assert((pp2 = page_alloc(0)));
-
 	assert(pp0);
 	assert(pp1 && pp1 != pp0);
 	assert(pp2 && pp2 != pp1 && pp2 != pp0);
@@ -563,8 +566,10 @@ check_page_alloc(void)
 	// number of free pages should be the same
 	for (pp = page_free_list; pp; pp = pp->pp_link)
 		--nfree;
-	assert(nfree == 0);
-
+	assert(nfree == 0); 
+    /*while (page_free_list) {
+        pp0 = page_alloc(0);
+    }*/
 	cprintf("check_page_alloc() succeeded!\n");
 }
 

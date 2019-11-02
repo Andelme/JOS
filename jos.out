@@ -7,7 +7,7 @@ iPXE (http://ipxe.org) 00:03.0 C980 PCI2.10 PnP PMM+07F91410+07EF1410 C980
 Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
 
 
-Booting from Hard Disk..Detected 3095.266 MHz processor.
+Booting from Hard Disk..Detected 3095.244 MHz processor.
 6828 decimal is 15254 octal!
 END: 0xe011d000
 Physical memory: 131072K available, base = 640K, extended = 65532K, pextended = 114688K
@@ -16,4 +16,4 @@ enabled interrupts: 2
 enabled interrupts: 2 8
 Welcome to the JOS kernel monitor!
 Type 'help' for a list of commands.
-qemu-system-i386: terminating on signal 15 from pid 80690 (<unknown process>)
+qemu-system-i386: terminating on signal 15 from pid 8719 (<unknown process>)
