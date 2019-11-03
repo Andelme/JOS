@@ -117,7 +117,7 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	info->eip_fn_narg = 0;
 
 	// Find the relevant set of stabs
-	if (addr <= ULIM) { //replace >=
+	if (addr >= ULIM) { //replace >=
 		stabs = __STAB_BEGIN__;
 		stab_end = __STAB_END__;
 		stabstr = __STABSTR_BEGIN__;
@@ -130,7 +130,6 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	// String table validity checks
 	if (stabstr_end <= stabstr || stabstr_end[-1] != 0)
 		return -1;
-
 	// Now we find the right stabs that define the function containing
 	// 'eip'.  First, we find the basic source file containing 'eip'.
 	// Then, we look in that source file for the function.  Then we look
@@ -142,7 +141,6 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 	stab_binsearch(stabs, &lfile, &rfile, N_SO, addr);
 	if (lfile == 0)
 		return -1;
-
 	// Search within that file's stabs for the function definition
 	// (N_FUN).
 	lfun = lfile;

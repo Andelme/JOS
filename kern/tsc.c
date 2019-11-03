@@ -63,7 +63,7 @@ static inline int pit_expect_msb(unsigned char val, uint64_t *tscp, unsigned lon
 			break;
 		tsc = read_tsc();
 	}
-	*deltap = read_tsc() - tsc;
+	*deltap = (unsigned long) (read_tsc() - tsc);
 	*tscp = tsc;
 
 	/*
