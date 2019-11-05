@@ -8,5 +8,4 @@ fun:check_page_installed_pgdir
 src:kern/console.c
 # KASAN itself should not be instrumented
 src:llvm/asan/*
-fun:mon_backtrace
 
