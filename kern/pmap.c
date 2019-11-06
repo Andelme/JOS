@@ -54,17 +54,20 @@ i386_detect_memory(void)
 
 	// Calculate the number of physical pages available in both base
 	// and extended memory.
+	if (npages_pextmem > 417792 * 1024 / PGSIZE) {
+	    npages_pextmem = 417792 * 1024 / PGSIZE;
+	    cprintf("Too much memory! Reducing to 424m");
+	}
 	if (npages_pextmem && npages_extmem > 0x1000)
 		npages = 0x1000 + npages_pextmem;
 	else if (npages_extmem)
 		npages = (EXTPHYSMEM / PGSIZE) + npages_extmem;
 	else
 		npages = npages_basemem;
-
 	cprintf("Physical memory: %uK available, base = %uK, extended = %uK, pextended = %uK\n",
 		npages * PGSIZE / 1024,
 		npages_basemem * PGSIZE / 1024,
-		npages_extmem * PGSIZE / 1024,
+		npages_extmem * PGSIZE / 1024, 
 		npages_pextmem * PGSIZE / 1024);
 }
 
@@ -567,7 +570,7 @@ check_page_free_list(bool only_low_memory)
 			memset(page2kva(pp), 0x97, 128);
 #endif
 		}
-	}
+    }
 
 	first_free_page = (char *) boot_alloc(0);
 	for (pp = page_free_list; pp; pp = pp->pp_link) {

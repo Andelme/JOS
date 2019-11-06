@@ -119,7 +119,7 @@ GDBPORT	:= $(shell expr `id -u` % 5000 + 25000)
 # Compiler flags
 # -fno-builtin is required to avoid refs to undefined functions in the kernel.
 # Only optimize to -O1 to discourage inlining, which complicates backtraces.
-CFLAGS += $(DEFS) $(LABDEFS) -O1 -I$(TOP) -MD
+CFLAGS += $(DEFS) $(LABDEFS) -g -O0 -I$(TOP) -MD #MYFLAG
 CFLAGS += -m32 -fno-builtin -fno-omit-frame-pointer -fno-stack-protector
 CFLAGS += -Wall -Wformat=2 -Wno-unused-function -Werror
 CFLAGS += $(EXTRA_CFLAGS)
@@ -229,8 +229,7 @@ include lib/Makefrag
 include prog/Makefrag
 
 
-
-QEMUOPTS = -drive format=raw,index=0,media=disk,file=$(OBJDIR)/kern/kernel.img -serial mon:stdio -gdb tcp::$(GDBPORT)
+QEMUOPTS = -drive format=raw,index=0,media=disk,file=$(OBJDIR)/kern/kernel.img -serial mon:stdio -gdb tcp::$(GDBPORT) -m 425m
 QEMUOPTS += $(shell if $(QEMU) -nographic -help | grep -q '^-D '; then echo '-D qemu.log'; fi)
 IMAGES = $(OBJDIR)/kern/kernel.img
 QEMUOPTS += $(QEMUEXTRA)
