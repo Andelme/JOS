@@ -196,11 +196,14 @@ env_setup_vm(struct Env *e)
 	//	pp_ref for env_free to work correctly.
 	//    - The functions in kern/pmap.h are handy.
 
-	// LAB 8: Your code here.
+    p->pp_ref++;
+	e->env_pgdir = page2kva(p);
+	memset(e->env_pgdir, 0, PDX(UTOP) * 4);
+	memmove(e->env_pgdir + PDX(UTOP), kern_pgdir + PDX(UTOP), PGSIZE - PDX(UTOP) * 4);
 
 	// UVPT maps the env's own page table read-only.
 	// Permissions: kernel R, user R
-	e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
+	e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_U | PTE_P;
 
 	return 0;
 }
@@ -230,7 +233,7 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 
 	// Generate an env_id for this environment.
 	generation = (e->env_id + (1 << ENVGENSHIFT)) & ~(NENV - 1);
-	if (generation <= 0)	// Don't create a negative env_id.
+	if (generation <= 0)	// Don'уreate a negative env_id.
 		generation = 1 << ENVGENSHIFT;
 	e->env_id = generation | (e - envs);
 
@@ -294,7 +297,13 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 static void
 region_alloc(struct Env *e, void *va, size_t len)
 {
-	// LAB 8: Your code here.
+    void *i_va;
+	struct PageInfo *p;
+
+	for (i_va = ROUNDDOWN(va, PGSIZE); i_va < ROUNDUP(va + len, PGSIZE); i_va += PGSIZE) {
+		p = page_alloc(0);
+		page_insert(e->env_pgdir, p, i_va, PTE_W | PTE_U);
+    }
 	// (But only if you need it for load_icode.)
 	//
 	// Hint: It is easier to use region_alloc if the caller can pass
@@ -313,7 +322,7 @@ bind_functions(struct Env *e, struct Elf *elf)
 	struct Secthdr *sh, *esh;
 	char *shstrtab, *strtab;
 	uintptr_t fn_ptr;
-
+    
 	sh = (struct Secthdr *) ((uint8_t *) elf + elf->e_shoff);
 	esh = sh + elf->e_shnum;
 	symtab = NULL;
@@ -397,28 +406,35 @@ load_icode(struct Env *e, uint8_t *binary, size_t size)
 	//  What?  (See env_run() and env_pop_tf() below.)
     struct Proghdr *ph, *eph;
     struct Elf *elf_hdr = (struct Elf *) binary;
-    if (elf_hdr->e_magic != ELF_MAGIC) 
+
+    if (elf_hdr->e_magic != ELF_MAGIC) {
         panic("load_icode: invalid binary");
+    }
+
 	ph = (struct Proghdr *) ((uint8_t *) elf_hdr + elf_hdr->e_phoff);
 	eph = ph + elf_hdr->e_phnum;
     
+    lcr3(PADDR(e->env_pgdir));
     for (; ph < eph; ++ph) {
         if (ph->p_type == ELF_PROG_LOAD) {
-            if (ph->p_filesz > ph->p_memsz)
+            if (ph->p_filesz > ph->p_memsz) {
                 panic("load_icode: file size larger than memory size");
+            }
+            region_alloc(e, (void *) ph->p_va, ph->p_memsz);
             memmove((void *) ph->p_va, binary + ph->p_offset, ph->p_filesz);
             memset((void *) ph->p_va + ph->p_filesz, 0, ph->p_memsz - ph->p_filesz);
         }
     }
+	lcr3(PADDR(kern_pgdir));
 
     e->env_tf.tf_eip = elf_hdr->e_entry;
 
 #ifdef CONFIG_KSPACE
-	bind_functions(NULL, elf_hdr);
+	bind_functions(e, elf_hdr);
 #endif
 	// Now map USTACKSIZE for the program's initial stack
 	// at virtual address USTACKTOP - USTACKSIZE.
-	// LAB 8: Your code here.
+    region_alloc(e, (void *) (USTACKTOP - USTACKSIZE), USTACKSIZE);
 
 #ifdef SANITIZE_USER_SHADOW_BASE
 	region_alloc(e, (void *) SANITIZE_USER_SHADOW_BASE, SANITIZE_USER_SHADOW_SIZE);
@@ -630,8 +646,7 @@ env_run(struct Env *e)
     curenv->env_status = ENV_RUNNING;
     curenv->env_runs++;
 
-	//LAB 8: Your code here.
-
+    lcr3(PADDR(e->env_pgdir));
 	env_pop_tf(&e->env_tf);
 }
 

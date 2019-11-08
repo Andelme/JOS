@@ -11,5 +11,5 @@ umain(int argc, char **argv)
 	//The "cprintf" function is sanitized by UBSAN because lib/Makefrag accesses the USER_SAN_CFLAGS variable.
 	//The access operator ([]) is not used because it will trigger -Warray-bounds option of Clang,
 	//which will make this test unrunnable because of -Werror flag which is specified in GNUmakefile.
-	cprintf("%d\n", *(a + 5));
+	cprintf("I KILLED YOUR PROGRAM %d\n", *(a + 5));
 }

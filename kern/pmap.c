@@ -175,7 +175,8 @@ mem_init(void)
 
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
-	// LAB 8: Your code here.
+    envs = (struct Env *) boot_alloc(sizeof(*envs) * NENV);
+    memset(envs, 0, sizeof(&envs) * NENV);
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -198,7 +199,7 @@ mem_init(void)
 	//    - the new image at UPAGES -- kernel R, user R
 	//      (ie. perm = PTE_U | PTE_P)
 	//    - pages itself -- kernel RW, user NONE
-    boot_map_region(kern_pgdir, UPAGES, ROUNDUP(npages * sizeof(*pages), PGSIZE), PADDR(pages), PTE_U);
+    boot_map_region(kern_pgdir, UPAGES, ROUNDUP(sizeof(*pages) * npages, PGSIZE), PADDR(pages), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
 	// Map the 'envs' array read-only by the user at linear address UENVS
@@ -206,7 +207,7 @@ mem_init(void)
 	// Permissions:
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
-	// LAB 8: Your code here.
+    boot_map_region(kern_pgdir, UENVS, ROUNDUP(sizeof(*envs) * NENV, PGSIZE), PADDR(envs), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -609,6 +610,35 @@ check_page_free_list(bool only_low_memory)
 	assert(nfree_extmem > 0);
 }
 
+//user memory check functions
+static uintptr_t wrong_addr;
+
+int
+user_mem_check(struct Env *env, const void *va, size_t len, int perm)
+{
+	pte_t *ptep;
+	uintptr_t i_va;
+	for (i_va = ROUNDDOWN((uintptr_t) va, PGSIZE); i_va < ROUNDUP((uintptr_t) va + len, PGSIZE); i_va += PGSIZE) {
+		if (i_va >= ULIM || !page_lookup(env->env_pgdir, (void *) i_va, &ptep) || (*ptep & perm) != perm) {
+			if (i_va == ROUNDDOWN((uintptr_t) va, PGSIZE)) {
+				i_va = (uintptr_t) va;
+			}
+			wrong_addr = i_va;
+			return -E_FAULT;
+		}
+	}
+	return 0;
+}
+
+void
+user_mem_assert(struct Env *env, const void *va, size_t len, int perm)
+{
+	if (user_mem_check(env, va, len, perm | PTE_U | PTE_P) < 0) {
+		cprintf("[%08x] user_mem_check assertion failure for va %08x\n", env->env_id, wrong_addr);
+		env_destroy(env);
+	}
+}
+
 //
 // Check the physical page allocator (page_alloc(), page_free(),
 // and page_init()).
@@ -725,6 +755,7 @@ check_kern_pgdir(void)
 		case PDX(UVPT):
 		case PDX(KSTACKTOP-1):
 		case PDX(UPAGES):
+		case PDX(UENVS):
 			assert(pgdir[i] & PTE_P);
 			break;
 		default:
@@ -925,6 +956,7 @@ check_page_installed_pgdir(void)
 	page_free(pp0);
 	memset(page2kva(pp1), 1, PGSIZE);
 	memset(page2kva(pp2), 2, PGSIZE);
+
 	page_insert(kern_pgdir, pp1, (void*) PGSIZE, PTE_W);
 	assert(pp1->pp_ref == 1);
 	assert(*(uint32_t *)PGSIZE == 0x01010101U);
@@ -948,3 +980,5 @@ check_page_installed_pgdir(void)
 
 	cprintf("check_page_installed_pgdir() succeeded!\n");
 }
+
+
