@@ -594,11 +594,21 @@ static uintptr_t user_mem_check_addr;
 // Returns 0 if the user program can access this range of addresses,
 // and -E_FAULT otherwise.
 //
+
 int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
-	// LAB 8: Your code here.
-
+	pte_t *ptep;
+	uintptr_t i_va;
+	for (i_va = ROUNDDOWN((uintptr_t) va, PGSIZE); i_va < ROUNDUP((uintptr_t) va + len, PGSIZE); i_va += PGSIZE) {
+		if (i_va >= ULIM || !page_lookup(env->env_pgdir, (void *) i_va, &ptep) || (*ptep & perm) != perm) {
+			if (i_va == ROUNDDOWN((uintptr_t) va, PGSIZE)) {
+				i_va = (uintptr_t) va;
+			}
+			user_mem_check_addr = i_va;
+			return -E_FAULT;
+		}
+	}
 	return 0;
 }
 
@@ -609,16 +619,15 @@ user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 // If it cannot, 'env' is destroyed and, if env is the current
 // environment, this function will not return.
 //
+
 void
 user_mem_assert(struct Env *env, const void *va, size_t len, int perm)
 {
-	if (user_mem_check(env, va, len, perm | PTE_U) < 0) {
-		cprintf("[%08x] user_mem_check assertion failure for "
-			"va %08x\n", env->env_id, user_mem_check_addr);
-		env_destroy(env);	// may not return
+	if (user_mem_check(env, va, len, perm | PTE_U | PTE_P) < 0) {
+		cprintf("[%08x] user_mem_check assertion failure for va %08x\n", env->env_id, user_mem_check_addr);
+		env_destroy(env);
 	}
 }
-
 
 // --------------------------------------------------------------
 // Checking functions.
@@ -688,35 +697,6 @@ check_page_free_list(bool only_low_memory)
 
 	assert(nfree_basemem > 0);
 	assert(nfree_extmem > 0);
-}
-
-//user memory check functions
-static uintptr_t wrong_addr;
-
-int
-user_mem_check(struct Env *env, const void *va, size_t len, int perm)
-{
-	pte_t *ptep;
-	uintptr_t i_va;
-	for (i_va = ROUNDDOWN((uintptr_t) va, PGSIZE); i_va < ROUNDUP((uintptr_t) va + len, PGSIZE); i_va += PGSIZE) {
-		if (i_va >= ULIM || !page_lookup(env->env_pgdir, (void *) i_va, &ptep) || (*ptep & perm) != perm) {
-			if (i_va == ROUNDDOWN((uintptr_t) va, PGSIZE)) {
-				i_va = (uintptr_t) va;
-			}
-			wrong_addr = i_va;
-			return -E_FAULT;
-		}
-	}
-	return 0;
-}
-
-void
-user_mem_assert(struct Env *env, const void *va, size_t len, int perm)
-{
-	if (user_mem_check(env, va, len, perm | PTE_U | PTE_P) < 0) {
-		cprintf("[%08x] user_mem_check assertion failure for va %08x\n", env->env_id, wrong_addr);
-		env_destroy(env);
-	}
 }
 
 //

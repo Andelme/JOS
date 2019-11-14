@@ -32,7 +32,11 @@ duppage(envid_t dstenv, void *addr)
 		panic("sys_page_alloc: %i", r);
 	if ((r = sys_page_map(dstenv, addr, 0, UTEMP, PTE_P|PTE_U|PTE_W)) < 0)
 		panic("sys_page_map: %i", r);
-	memmove(UTEMP, addr, PGSIZE);
+#ifdef SANITIZE_USER_SHADOW_BASE
+	__nosan_memcpy(UTEMP, addr, PGSIZE);
+#else
+    memmove(UTEMP, addr, PGSIZE);
+#endif
 	if ((r = sys_page_unmap(0, UTEMP)) < 0)
 		panic("sys_page_unmap: %i", r);
 }

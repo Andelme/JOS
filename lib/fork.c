@@ -23,7 +23,9 @@ pgfault(struct UTrapframe *utf)
 	//   Use the read-only page table mappings at uvpt
 	//   (see <inc/memlayout.h>).
 
-	// LAB 9: Your code here.
+    if (!((err & FEC_WR) && (uvpt(PGNUM(addr))))) {
+        panic("");
+    }
 
 	// Allocate a new page, map it at a temporary location (PFTEMP),
 	// copy the data from the old page to the new page, then move the new
