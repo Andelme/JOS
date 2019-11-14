@@ -16,15 +16,15 @@ pgfault(struct UTrapframe *utf)
 {
 	void *addr = (void *) utf->utf_fault_va;addr=addr;
 	uint32_t err = utf->utf_err;err=err;
-
+    int r;
 	// Check that the faulting access was (1) a write, and (2) to a
 	// copy-on-write page.  If not, panic.
 	// Hint:
 	//   Use the read-only page table mappings at uvpt
 	//   (see <inc/memlayout.h>).
 
-    if (!((err & FEC_WR) && (uvpt(PGNUM(addr))))) {
-        panic("");
+    if (!((err & FEC_WR) && (uvpt[PGNUM(addr)] & PTE_COW))) {
+        panic("Not a WR or not a COW page! va: %x err: %i\n", (unsigned) addr, (int) -err);
     }
 
 	// Allocate a new page, map it at a temporary location (PFTEMP),
@@ -35,9 +35,18 @@ pgfault(struct UTrapframe *utf)
 	//   No need to explicitly delete the old page's mapping.
 	//   Make sure you DO NOT use sanitized memcpy/memset routines when using UASAN.
 
-	// LAB 9: Your code here.
+    if ((err = sys_page_alloc(0, (void *) PFTEMP, PTE_W)) < 0) {
+		panic("pgfault error: sys_page_alloc: %i\n", r);
+    }
 
-	panic("pgfault not implemented");
+	memmove((void *) PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
+	if ((err = sys_page_map(0, (void *) PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W)) < 0) {
+	    panic("pgfault error: sys_page_map: %i\n", r);
+	}
+
+	if ((err = sys_page_unmap(0, (void *) PFTEMP)) < 0) {
+	    panic("pgfault error: sys_page_unmap: %i\n", r);
+	}
 }
 
 //
@@ -54,8 +63,20 @@ pgfault(struct UTrapframe *utf)
 static int
 duppage(envid_t envid, unsigned pn)
 {
-	// LAB 9: Your code here.
-	panic("duppage not implemented");
+    void *addr = (void *) (pn * PGSIZE);
+    int r;
+    if ((uvpt[pn] & PTE_COW) || (uvpt[pn] & PTE_W)) {
+        if ((r = sys_page_map(0, addr, envid, addr, PTE_COW)) < 0) {
+            panic("duppage error: sys_page_map 1: %i\n", r);
+		}
+		if ((r =sys_page_map(0, addr, 0, addr, PTE_COW)) < 0) {
+            panic("duppage error: sys_page_map 2: %i\n", r);
+		}
+    } else {
+        if ((r = sys_page_map(0, addr, envid, addr, 0)) < 0) {
+            panic("duppage error: sys_page_map 0: %i\n", r);
+        }
+    }
 	return 0;
 }
 
@@ -78,7 +99,41 @@ duppage(envid_t envid, unsigned pn)
 envid_t
 fork(void)
 {
-	// LAB 9: Your code here.
+	size_t pn;
+	envid_t e;
+    int r;
+
+	set_pgfault_handler(pgfault);
+    
+    if ((e = sys_exofork()) < 0) {
+        panic("fork error: %i\n", (int) e);
+    }
+	if (!e) {
+		thisenv = &envs[ENVX(sys_getenvid())];
+		return 0;
+	} else {
+	    int i, j;
+		for (i = 0; i < PGSIZE / sizeof(pde_t); ++i) {
+			if (uvpd[i] & PTE_P) {
+			    for (j = 0; j < PGSIZE / sizeof(pte_t); ++j) {
+				    pn = PGNUM(PGADDR(i, j, 0));
+				    if ((pn < PGNUM(UTOP)) && (pn != PGNUM(UXSTACKTOP - PGSIZE)) && (uvpt[pn] & PTE_P)) {
+					    if ((r = duppage(e, pn)) < 0) {
+						    return r;
+					    }
+				    }
+			    }
+			}
+        }
+        if ((r = sys_env_set_pgfault_upcall(e, thisenv->env_pgfault_upcall)) < 0) {
+            panic("fork error: sys_env_set_pgfault_upcall: %i\n", r);
+        }
+        if ((r = sys_page_alloc(e, (void *) UXSTACKTOP - PGSIZE, PTE_W)) < 0) {
+            panic("fork error: sys_page_alloc: %i\n", r);
+        }
+        if ((r = sys_env_set_status(e, ENV_RUNNABLE)) < 0) {
+            panic("fork error: sys_env_set_status: %i\n", r);
+        }
 
 /*
 
@@ -100,8 +155,8 @@ fork(void)
 #endif
 
 */
-
-	panic("fork not implemented");
+        return e;
+    }
 }
 
 // Challenge!
