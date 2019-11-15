@@ -35,16 +35,16 @@ pgfault(struct UTrapframe *utf)
 	//   No need to explicitly delete the old page's mapping.
 	//   Make sure you DO NOT use sanitized memcpy/memset routines when using UASAN.
 
-    if ((err = sys_page_alloc(0, (void *) PFTEMP, PTE_W)) < 0) {
+    if ((r = sys_page_alloc(0, (void *) PFTEMP, PTE_W)) < 0) {
 		panic("pgfault error: sys_page_alloc: %i\n", r);
     }
 
 	memmove((void *) PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
-	if ((err = sys_page_map(0, (void *) PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W)) < 0) {
+	if ((r = sys_page_map(0, (void *) PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W)) < 0) {
 	    panic("pgfault error: sys_page_map: %i\n", r);
 	}
 
-	if ((err = sys_page_unmap(0, (void *) PFTEMP)) < 0) {
+	if ((r = sys_page_unmap(0, (void *) PFTEMP)) < 0) {
 	    panic("pgfault error: sys_page_unmap: %i\n", r);
 	}
 }
@@ -134,7 +134,6 @@ fork(void)
         if ((r = sys_env_set_status(e, ENV_RUNNABLE)) < 0) {
             panic("fork error: sys_env_set_status: %i\n", r);
         }
-
 /*
 
 // Duplicating shadow addresses is insane. Make sure to skip shadow addresses in COW above.

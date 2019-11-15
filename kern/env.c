@@ -538,9 +538,9 @@ env_destroy(struct Env *e)
 	env_free(e);
     if (e == curenv)
 		sched_yield();
-	cprintf("Destroyed the only environment - nothing more to do!\n");
-	while (1)
-		monitor(NULL);
+	//cprintf("Destroyed the only environment - nothing more to do!\n");
+	//while (1)
+	//	monitor(NULL);
 }
 
 #ifdef CONFIG_KSPACE
