@@ -22,3 +22,6 @@
 /lab?-handin.tar.gz
 /lab?/
 /sol?/
+
+pgfault_upcall
+env_pgfault_upcall
