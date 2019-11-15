@@ -134,10 +134,9 @@ fork(void)
         if ((r = sys_env_set_status(e, ENV_RUNNABLE)) < 0) {
             panic("fork error: sys_env_set_status: %i\n", r);
         }
+
 /*
-
 // Duplicating shadow addresses is insane. Make sure to skip shadow addresses in COW above.
-
 #ifdef SANITIZE_USER_SHADOW_BASE
 	for (addr = SANITIZE_USER_SHADOW_BASE; addr < SANITIZE_USER_SHADOW_BASE +
 		SANITIZE_USER_SHADOW_SIZE; addr += PGSIZE)
@@ -152,8 +151,8 @@ fork(void)
 		if (sys_page_alloc(p, (void *)addr, PTE_P | PTE_U | PTE_W))
 			panic("Fork: failed to alloc shadow fs base page");
 #endif
-
 */
+
         return e;
     }
 }
