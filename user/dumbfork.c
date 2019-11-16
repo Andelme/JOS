@@ -33,6 +33,19 @@ duppage(envid_t dstenv, void *addr)
 	if ((r = sys_page_map(dstenv, addr, 0, UTEMP, PTE_P|PTE_U|PTE_W)) < 0)
 		panic("sys_page_map: %i", r);
 #ifdef SANITIZE_USER_SHADOW_BASE
+    uintptr_t i;
+	for (i = SANITIZE_USER_SHADOW_BASE; i < SANITIZE_USER_SHADOW_BASE +
+	    SANITIZE_USER_SHADOW_SIZE; i += PGSIZE)
+	    if ((r = sys_page_alloc(dstenv, (void *) i, PTE_P | PTE_U | PTE_W)) < 0)
+		    panic("Fork: failed to alloc shadow base page: %i\n", r);
+    for (i = SANITIZE_USER_EXTRA_SHADOW_BASE; i < SANITIZE_USER_EXTRA_SHADOW_BASE +
+	    SANITIZE_USER_EXTRA_SHADOW_SIZE; i += PGSIZE)
+	    if ((r = sys_page_alloc(dstenv, (void *) i, PTE_P | PTE_U | PTE_W)) < 0)
+		    panic("Fork: failed to alloc shadow extra base page: %i\n", r);
+    for (i = SANITIZE_USER_FS_SHADOW_BASE; i < SANITIZE_USER_FS_SHADOW_BASE +
+	    SANITIZE_USER_FS_SHADOW_SIZE; i += PGSIZE)
+	    if ((r = sys_page_alloc(dstenv, (void *) i, PTE_P | PTE_U | PTE_W)) < 0)
+		    panic("Fork: failed to alloc shadow fs base page: %i\n", r);
 	__nosan_memcpy(UTEMP, addr, PGSIZE);
 #else
     memmove(UTEMP, addr, PGSIZE);

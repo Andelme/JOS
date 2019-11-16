@@ -152,16 +152,16 @@ fork(void)
         uintptr_t addr;
 	    for (addr = SANITIZE_USER_SHADOW_BASE; addr < SANITIZE_USER_SHADOW_BASE +
 		    SANITIZE_USER_SHADOW_SIZE; addr += PGSIZE)
-		    if (sys_page_alloc(e, (void *) addr, PTE_P | PTE_U | PTE_W))
-			    panic("Fork: failed to alloc shadow base page");
+		    if ((r = sys_page_alloc(e, (void *) addr, PTE_P | PTE_U | PTE_W)) < 0)
+			    panic("Fork: failed to alloc shadow base page: %i\n", r);
 	    for (addr = SANITIZE_USER_EXTRA_SHADOW_BASE; addr < SANITIZE_USER_EXTRA_SHADOW_BASE +
 		    SANITIZE_USER_EXTRA_SHADOW_SIZE; addr += PGSIZE)
-		    if (sys_page_alloc(e, (void *) addr, PTE_P | PTE_U | PTE_W))
-			    panic("Fork: failed to alloc shadow extra base page");
+		    if ((r = sys_page_alloc(e, (void *) addr, PTE_P | PTE_U | PTE_W)) < 0)
+			    panic("Fork: failed to alloc shadow extra base page: %i\n", r);
 	    for (addr = SANITIZE_USER_FS_SHADOW_BASE; addr < SANITIZE_USER_FS_SHADOW_BASE +
 		    SANITIZE_USER_FS_SHADOW_SIZE; addr += PGSIZE)
-		    if (sys_page_alloc(e, (void *) addr, PTE_P | PTE_U | PTE_W))
-			    panic("Fork: failed to alloc shadow fs base page");
+		    if ((r = sys_page_alloc(e, (void *) addr, PTE_P | PTE_U | PTE_W)) < 0)
+			    panic("Fork: failed to alloc shadow fs base page: %i\n", r);
 #endif
         if ((r = sys_env_set_status(e, ENV_RUNNABLE)) < 0) {
             panic("fork error: sys_env_set_status: %i\n", r);

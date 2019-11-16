@@ -119,7 +119,7 @@ GDBPORT	:= $(shell expr `id -u` % 5000 + 25000)
 # Compiler flags
 # -fno-builtin is required to avoid refs to undefined functions in the kernel.
 # Only optimize to -O1 to discourage inlining, which complicates backtraces.
-CFLAGS += $(DEFS) $(LABDEFS) -g -O0 -I$(TOP) -MD #MYFLAG
+CFLAGS += $(DEFS) $(LABDEFS) -O0 -I$(TOP) -MD #MYFLAG
 CFLAGS += -m32 -fno-builtin -fno-omit-frame-pointer -fno-stack-protector
 CFLAGS += -Wall -Wformat=2 -Wno-unused-function -Werror
 CFLAGS += $(EXTRA_CFLAGS)

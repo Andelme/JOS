@@ -6,3 +6,5 @@ src:user/faultreadkernel.c
 src:user/faultwrite.c
 src:user/faultwritekernel.c
 src:user/testbss.c
+src:user/*
+src:user/faultdie.c
