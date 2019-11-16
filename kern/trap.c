@@ -26,7 +26,7 @@ static struct Taskstate ts;
  */
 static struct Trapframe *last_tf;
 
-/* Interrupt descriptor table.  (Must be built at run time because
+/* Interrupt descriptor table.  (Mus0 be built at run time because
  * shifted function addresses can't be represented in relocation records.)
  */
 struct Gatedesc idt[256] = { { 0 } };

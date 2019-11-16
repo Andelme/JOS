@@ -30,7 +30,7 @@ static struct Command commands[] = {
 	{ "backtrace", "Display stack backtrace", mon_backtrace },
     { "timer_start", "Start timer", mon_timer_start },
     { "timer_stop", "Stop timer", mon_timer_stop },
-    { "pplist", "Display physical pages", mon_pplist }
+    { "pplist", "Display physical pages", mon_pplist },
 };
 #define NCOMMANDS (sizeof(commands)/sizeof(commands[0]))
 
@@ -118,6 +118,7 @@ mon_pplist(int argc, char **argv, struct Trapframe *tf)
 	}
 	return 0;
 }
+
 /***** Kernel monitor command interpreter *****/
 
 #define WHITESPACE "\t\r\n "

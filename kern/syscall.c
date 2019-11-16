@@ -309,16 +309,14 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	if (envid2env(envid, &e, 0) < 0) {
 		return -E_BAD_ENV;
 	}
-
 	if (!e->env_ipc_recving) {
 		return -E_IPC_NOT_RECV;
 	}
-
 	if ((uintptr_t) srcva < UTOP) {
 		if (PGOFF(srcva)) {
 			return -E_INVAL;
 		}
-		if (!(perm & (PTE_U | PTE_P)) || (perm & ~PTE_SYSCALL)) {
+		if ((perm & ~(PTE_U | PTE_P)) || (perm & ~PTE_SYSCALL)) {
 			return -E_INVAL;
 		}
 		if (!(p = page_lookup(curenv->env_pgdir, srcva, &ptep))) {
@@ -327,7 +325,6 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		if (!(*ptep & PTE_W) && (perm & PTE_W)) {
 			return -E_INVAL;
 		}
-
 		if (page_insert(e->env_pgdir, p, e->env_ipc_dstva, perm)) {
 			return -E_NO_MEM;
 		}
@@ -364,8 +361,8 @@ sys_ipc_recv(void *dstva)
 	curenv->env_ipc_recving = 1;
 	curenv->env_ipc_dstva = dstva;
 	curenv->env_status = ENV_NOT_RUNNABLE;
-
-	//sched_yield();
+    curenv->env_tf.tf_regs.reg_eax = 0;
+	sched_yield();
 	return 0;
 }
 

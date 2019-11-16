@@ -25,11 +25,9 @@ void
 set_pgfault_handler(void (*handler)(struct UTrapframe *utf))
 {
 	if (_pgfault_handler == 0) {
-		// First time through!
-	    sys_page_alloc(0, (void *) UXSTACKTOP - PGSIZE, PTE_W);
-		sys_env_set_pgfault_upcall(0, _pgfault_upcall);
+	    sys_page_alloc(thisenv->env_id, (void *) UXSTACKTOP - PGSIZE, PTE_W);
+		sys_env_set_pgfault_upcall(thisenv->env_id, _pgfault_upcall);
     }
 
-	// Save handler pointer for assembly to call.
 	_pgfault_handler = handler;
 }

@@ -39,12 +39,11 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store)
 		if (perm_store) {
 			*perm_store = thisenv->env_ipc_perm;
 		}
-		return thisenv->env_ipc_value;
-	}
 #ifdef SANITIZE_USER_SHADOW_BASE
 	platform_asan_unpoison(pg, PGSIZE);
 #endif
-	return 0;
+		return thisenv->env_ipc_value;
+	}
 }
 
 // Send 'val' (and 'pg' with 'perm', if 'pg' is nonnull) to 'toenv'.
@@ -59,9 +58,10 @@ void
 ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
 {
     int r;
-    
-	pg = (pg) ? pg : (void *) UTOP;
 
+    if (pg == NULL) {
+        pg = (void *) UTOP;
+    }
 	while ((r = sys_ipc_try_send(to_env, val, pg, perm))) {
 		if (r < 0 && r != -E_IPC_NOT_RECV) {
 			panic("ipc_send error: sys_ipc_try_send: %i\n", r);
