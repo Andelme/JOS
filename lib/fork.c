@@ -137,7 +137,7 @@ fork(void)
 					    }
 				    }
 			    }
-			}
+		    }
         }
         if ((r = sys_env_set_pgfault_upcall(e, thisenv->env_pgfault_upcall)) < 0) {
             panic("fork error: sys_env_set_pgfault_upcall: %i\n", r);
