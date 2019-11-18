@@ -83,8 +83,10 @@ sys_exofork(void)
 	// from the current environment -- but tweaked so sys_exofork
 	// will appear to return 0.
     struct Env *e = NULL;
-    if (env_alloc(&e, curenv->env_id) < 0) {
-        return -E_INVAL;
+    int r;
+
+    if ((r = env_alloc(&e, curenv->env_id)) < 0) {
+        return r;
     }
     e->env_status = ENV_NOT_RUNNABLE;
     e->env_tf = curenv->env_tf;
@@ -111,7 +113,7 @@ sys_env_set_status(envid_t envid, int status)
 	// envid's status.
     struct Env *e;
     if (envid2env(envid, &e, 1) < 0) {
-        return -E_INVAL;
+        return -E_BAD_ENV;
     }
     if (!(status == ENV_RUNNABLE || status == ENV_NOT_RUNNABLE)) {
         return -E_INVAL;

@@ -72,7 +72,7 @@ duppage(envid_t envid, unsigned pn)
         if ((r = sys_page_map(0, addr, envid, addr, PTE_COW)) < 0) {
             panic("duppage error: sys_page_map 1: %i\n", r);
 		}
-		if ((r =sys_page_map(0, addr, 0, addr, PTE_COW)) < 0) {
+		if ((r = sys_page_map(0, addr, 0, addr, PTE_COW)) < 0) {
             panic("duppage error: sys_page_map 2: %i\n", r);
 		}
     } else {
