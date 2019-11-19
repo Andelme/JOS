@@ -24,7 +24,7 @@ pgfault(struct UTrapframe *utf)
 	//   (see <inc/memlayout.h>).
 
     if (!((err & FEC_WR) && (uvpt[PGNUM(addr)] & PTE_COW))) {
-        panic("Not a WR or not a COW page! va: %x err: %i\n", (unsigned) addr, (int) -err);
+        panic("Not a WR or not a COW page! va: %x err: %x\n", (uint32_t) addr, err);
     }
 
 	// Allocate a new page, map it at a temporary location (PFTEMP),
