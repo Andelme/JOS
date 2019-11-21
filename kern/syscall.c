@@ -331,12 +331,12 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		return -E_IPC_NOT_RECV;
 	}
 	if ((uintptr_t) srcva < UTOP) {
-		if (PGOFF(srcva)) {
+	    if (PGOFF(srcva)) {
 			return -E_INVAL;
 		}
-		/*if ((perm & ~(PTE_U | PTE_P)) || (perm & ~PTE_SYSCALL)) {
+		if (perm & ~PTE_SYSCALL) {
 			return -E_INVAL;
-		}*/
+		}
 		if (!(p = page_lookup(curenv->env_pgdir, srcva, &ptep))) {
 			return -E_INVAL;
 		}
@@ -345,7 +345,8 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		}
 		if (page_insert(e->env_pgdir, p, e->env_ipc_dstva, perm)) {
 			return -E_NO_MEM;
-		}
+        }
+        e->env_ipc_perm = perm;
 	}
 	else {
 		e->env_ipc_perm = 0;
