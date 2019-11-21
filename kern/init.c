@@ -84,7 +84,7 @@ i386_init(void)
 	kbd_intr();
 
 	// Schedule and run the first user environment!
-	//sched_yield();
+	sched_yield();
 }
 
 

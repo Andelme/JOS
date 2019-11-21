@@ -334,9 +334,9 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		if (PGOFF(srcva)) {
 			return -E_INVAL;
 		}
-		if ((perm & ~(PTE_U | PTE_P)) || (perm & ~PTE_SYSCALL)) {
+		/*if ((perm & ~(PTE_U | PTE_P)) || (perm & ~PTE_SYSCALL)) {
 			return -E_INVAL;
-		}
+		}*/
 		if (!(p = page_lookup(curenv->env_pgdir, srcva, &ptep))) {
 			return -E_INVAL;
 		}
