@@ -40,7 +40,7 @@ block_is_free(uint32_t blockno)
 void
 free_block(uint32_t blockno)
 {
-	// Blockno zero is the null pointer of block numbers.
+	// Blockno zero is the null pointer of block numbercount.
 	if (blockno == 0)
 		panic("attempt to free zero block");
 	bitmap[blockno/32] |= 1<<(blockno%32);
