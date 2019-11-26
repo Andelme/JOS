@@ -241,7 +241,7 @@ sys_page_map(envid_t srcenvid, void *srcva, envid_t dstenvid, void *dstva, int p
             (uintptr_t) dstva >= UTOP || PGOFF(dstva)) {
         return -E_INVAL;
     }
-    if (perm & ~PTE_SYSCALL) {
+    if (((perm & (PTE_P | PTE_U)) != (PTE_P | PTE_U)) || perm & ~PTE_SYSCALL) {
         return -E_INVAL;
     }
     if (!(pp = page_lookup(srcenv->env_pgdir, srcva, &ptep))) { 
@@ -334,7 +334,7 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	    if (PGOFF(srcva)) {
 			return -E_INVAL;
 		}
-		if (perm & ~PTE_SYSCALL) {
+		if (((perm & (PTE_P | PTE_U)) != (PTE_P | PTE_U)) || perm & ~PTE_SYSCALL) {
 			return -E_INVAL;
 		}
 		if (!(p = page_lookup(curenv->env_pgdir, srcva, &ptep))) {
