@@ -91,6 +91,9 @@ trap_init(void)
     
     extern void (*syscall_thdlr)(void);
 
+    extern void (*kbd_thdlr)(void);
+    extern void (*serial_thdlr)(void);
+
 	SETGATE(idt[T_DIVIDE], 0, GD_KT, (int) &divide_thdlr, 0);
 	SETGATE(idt[T_DEBUG], 0, GD_KT, (int) &debug_thdlr, 0);
 	SETGATE(idt[T_NMI], 0, GD_KT, (int) &nmi_thdlr, 0);
@@ -105,6 +108,9 @@ trap_init(void)
 	SETGATE(idt[T_GPFLT], 0, GD_KT, (int) &gpflt_thdlr, 0);
 	SETGATE(idt[T_PGFLT], 0, GD_KT, (int) &pgflt_thdlr, 0);
 	SETGATE(idt[T_FPERR], 0, GD_KT, (int) &fperr_thdlr, 0);
+	SETGATE(idt[IRQ_OFFSET + IRQ_KBD], 0, GD_KT, &kbd_thdlr, 3);
+	SETGATE(idt[IRQ_OFFSET + IRQ_SERIAL], 0, GD_KT, &serial_thdlr, 3);
+
     
     SETGATE(idt[T_SYSCALL], 0, GD_KT, (int) &syscall_thdlr, 3);
 	// Per-CPU setup 
