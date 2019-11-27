@@ -179,11 +179,12 @@ mem_init(void)
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
     envs = (struct Env *) boot_alloc(sizeof(*envs) * NENV);
-    memset(envs, 0, sizeof(&envs) * NENV);
+    memset(envs, 0, sizeof(*envs) * NENV);
 
 	//////////////////////////////////////////////////////////////////////
 	// Make 'vsys' point to an array of size 'NVSYSCALLS' of int.
-	// LAB 12: Your code here.
+    vsys = (int *) boot_alloc(sizeof(*vsys) * NVSYSCALLS);
+    memset(vsys, 0, sizeof(*vsys) * NVSYSCALLS);
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -222,8 +223,7 @@ mem_init(void)
 	// Permissions:
 	//    - the new image at UVSYS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
-	// LAB 12: Your code here.
-
+    boot_map_region(kern_pgdir, UVSYS, ROUNDUP(sizeof(*vsys) * NVSYSCALLS, PGSIZE), PADDR(vsys), PTE_U);
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
 	// stack.  The kernel stack grows down from virtual address KSTACKTOP.

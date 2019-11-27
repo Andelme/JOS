@@ -3,6 +3,7 @@
 #include <inc/stdio.h>
 #include <inc/string.h>
 #include <inc/assert.h>
+#include <inc/vsyscall.h>
 
 #include <kern/monitor.h>
 #include <kern/tsc.h>
@@ -14,6 +15,8 @@
 #include <kern/cpu.h>
 #include <kern/picirq.h>
 #include <kern/kclock.h>
+
+int *vsys;
 
 void
 i386_init(void)
@@ -58,6 +61,9 @@ i386_init(void)
 
 	pic_init();
 	rtc_init();
+
+	vsys[VSYS_gettime] = gettime();
+
     irq_setmask_8259A(~(~irq_mask_8259A | (1 << IRQ_CLOCK)));
 
     //monitor(NULL);

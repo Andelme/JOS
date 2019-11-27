@@ -2,6 +2,7 @@
 #include <inc/x86.h>
 #include <inc/assert.h>
 #include <inc/string.h>
+#include <inc/vsyscall.h>
 
 #include <kern/pmap.h>
 #include <kern/trap.h>
@@ -17,6 +18,8 @@
 #ifndef debug
 # define debug 0
 #endif
+
+int *vsys;
 
 static struct Taskstate ts;
 
@@ -211,7 +214,8 @@ trap_dispatch(struct Trapframe *tf)
 	}
 	if (tf->tf_trapno == IRQ_OFFSET + IRQ_CLOCK) {
 	    rtc_check_status();
-	    pic_send_eoi(rtc_check_status());
+	    pic_send_eoi(IRQ_CLOCK);
+	    vsys[VSYS_gettime] = gettime();
 		sched_yield();
 		return;
 	}
@@ -232,11 +236,15 @@ trap_dispatch(struct Trapframe *tf)
 
 	// Handle keyboard and serial interrupts.
     if (tf->tf_trapno == IRQ_OFFSET + IRQ_KBD) {
+        pic_send_eoi(IRQ_KBD);
 		kbd_intr();
+		sched_yield();
 		return;
 	}
 	if (tf->tf_trapno == IRQ_OFFSET + IRQ_SERIAL) {
+	    pic_send_eoi(IRQ_SERIAL);
 	    serial_intr();
+	    sched_yield();
 	    return;
 	}
 

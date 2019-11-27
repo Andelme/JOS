@@ -2,14 +2,39 @@
 
 #include <inc/x86.h>
 #include <kern/kclock.h>
+#include <inc/time.h>
 
-int gettime(void)
+static int
+get_timestamp(void)
 {
+    struct tm time;
+
+	time.tm_sec = BCD2BIN(mc146818_read(RTC_SEC));
+	time.tm_min = BCD2BIN(mc146818_read(RTC_MIN));
+	time.tm_hour = BCD2BIN(mc146818_read(RTC_HOUR));
+	time.tm_mday = BCD2BIN(mc146818_read(RTC_DAY));
+	time.tm_mon = BCD2BIN(mc146818_read(RTC_MON));
+	time.tm_year = BCD2BIN(mc146818_read(RTC_YEAR));
+
+	return timestamp(&time);
+}
+
+int 
+gettime(void)
+{
+	int t;
+
 	nmi_disable();
-	// LAB 12: your code here
+
+    while (mc146818_read(RTC_AREG) & RTC_UPDATE_IN_PROGRESS);
+
+    if ((t = get_timestamp()) != get_timestamp()) {
+        t = get_timestamp();
+    }
 
 	nmi_enable();
-	return 0;
+
+	return t;
 }
 
 void
