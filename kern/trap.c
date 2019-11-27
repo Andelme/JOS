@@ -222,6 +222,10 @@ trap_dispatch(struct Trapframe *tf)
 		monitor(tf);
 		return;
 	}
+
+	// Handle keyboard and serial interrupts.
+	// LAB 11: Your code here.
+
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT) {
 		panic("unhandled trap in kernel");
