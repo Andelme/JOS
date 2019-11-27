@@ -43,7 +43,7 @@ pgfault(struct UTrapframe *utf)
 #else
 	memmove((void *) PFTEMP, ROUNDDOWN(addr, PGSIZE), PGSIZE);
 #endif
-	if ((r = sys_page_map(0, (void *) PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_W)) < 0) {
+	if ((r = sys_page_map(0, (void *) PFTEMP, 0, ROUNDDOWN(addr, PGSIZE), PTE_U | PTE_P | PTE_W)) < 0) {
 	    panic("pgfault error: sys_page_map: %i\n", r);
 	}
 
@@ -68,16 +68,20 @@ duppage(envid_t envid, unsigned pn)
 {
     void *addr = (void *) (pn * PGSIZE);
     int r;
-    if ((uvpt[pn] & PTE_COW) || (uvpt[pn] & PTE_W)) {
-        if ((r = sys_page_map(0, addr, envid, addr, PTE_COW)) < 0) {
-            panic("duppage error: sys_page_map 1: %i\n", r);
+    if (uvpt[pn] & PTE_SHARE) {
+        if ((r = sys_page_map(0, addr, envid, addr, uvpt[pn] & PTE_SYSCALL)) < 0) {
+            panic("duppage error: sys_page_map PTE_SHARE: %i\n", r);
+        }
+    } else if (uvpt[pn] & (PTE_W | PTE_COW)) {
+        if ((r = sys_page_map(0, addr, envid, addr, PTE_U | PTE_P | PTE_COW)) < 0) {
+            panic("duppage error: sys_page_map PTE_COW - child: %i\n", r);
 		}
-		if ((r = sys_page_map(0, addr, 0, addr, PTE_COW)) < 0) {
-            panic("duppage error: sys_page_map 2: %i\n", r);
+		if ((r = sys_page_map(0, addr, 0, addr, PTE_U | PTE_P | PTE_COW)) < 0) {
+            panic("duppage error: sys_page_map PTE_COW - parent: %i\n", r);
 		}
     } else {
-        if ((r = sys_page_map(0, addr, envid, addr, 0)) < 0) {
-            panic("duppage error: sys_page_map 0: %i\n", r);
+        if ((r = sys_page_map(0, addr, envid, addr, uvpt[pn] & PTE_SYSCALL)) < 0) {
+            panic("duppage error: sys_page_map basic: %i\n", r);
         }
     }
 	return 0;

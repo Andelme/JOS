@@ -204,6 +204,7 @@ trap_dispatch(struct Trapframe *tf)
 		return;
 	}
 	if (tf->tf_trapno == IRQ_OFFSET + IRQ_CLOCK) {
+	    rtc_check_status();
 	    pic_send_eoi(rtc_check_status());
 		sched_yield();
 		return;
@@ -224,7 +225,14 @@ trap_dispatch(struct Trapframe *tf)
 	}
 
 	// Handle keyboard and serial interrupts.
-	// LAB 11: Your code here.
+    if (tf->tf_trapno == IRQ_OFFSET + IRQ_KBD) {
+		kbd_intr();
+		return;
+	}
+	if (tf->tf_trapno == IRQ_OFFSET + IRQ_SERIAL) {
+	    serial_intr();
+	    return;
+	}
 
 	print_trapframe(tf);
 	if (tf->tf_cs == GD_KT) {
