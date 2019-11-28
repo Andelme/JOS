@@ -210,12 +210,14 @@ trap_dispatch(struct Trapframe *tf)
 	if (tf->tf_trapno == IRQ_OFFSET + IRQ_SPURIOUS) {
 		cprintf("Spurious interrupt on irq 7\n");
 		print_trapframe(tf);
+		pic_send_eoi(IRQ_SPURIOUS);
+		sched_yield();
 		return;
 	}
 	if (tf->tf_trapno == IRQ_OFFSET + IRQ_CLOCK) {
 	    rtc_check_status();
-	    pic_send_eoi(IRQ_CLOCK);
 	    vsys[VSYS_gettime] = gettime();
+	    pic_send_eoi(IRQ_CLOCK);
 		sched_yield();
 		return;
 	}
@@ -236,14 +238,14 @@ trap_dispatch(struct Trapframe *tf)
 
 	// Handle keyboard and serial interrupts.
     if (tf->tf_trapno == IRQ_OFFSET + IRQ_KBD) {
-        pic_send_eoi(IRQ_KBD);
 		kbd_intr();
+        pic_send_eoi(IRQ_KBD);
 		sched_yield();
 		return;
 	}
 	if (tf->tf_trapno == IRQ_OFFSET + IRQ_SERIAL) {
-	    pic_send_eoi(IRQ_SERIAL);
 	    serial_intr();
+	    pic_send_eoi(IRQ_SERIAL);
 	    sched_yield();
 	    return;
 	}
