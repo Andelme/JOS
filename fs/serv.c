@@ -13,7 +13,7 @@
 #endif
 
 #define debug 0
-
+#define BUFSIZE PGSIZE - sizeof(int) - sizeof(size_t)
 // The file system server maintains three structures
 // for each open file.
 //
@@ -214,10 +214,13 @@ serve_read(envid_t envid, union Fsipc *ipc)
 	if (debug)
 		cprintf("serve_read %08x %08x %08x\n", envid, req->req_fileid, req->req_n);
 
+	// Lab 10: Your code here:
 	if ((r = openfile_lookup(envid, req->req_fileid, &o)) < 0) {
 	    return r;
 	}
-
+	if (req->req_n > BUFSIZE) {
+		req->req_n = BUFSIZE;
+	}
 	int count = file_read(o->o_file, ret->ret_buf, req->req_n, o->o_fd->fd_offset);
     if (count > 0) {
         o->o_fd->fd_offset += count;
@@ -235,10 +238,10 @@ serve_write(envid_t envid, struct Fsreq_write *req)
 {
     struct OpenFile *o;
     int r;
-
 	if (debug)
 		cprintf("serve_write %08x %08x %08x\n", envid, req->req_fileid, req->req_n);
-    
+
+	// LAB 10: Your code here.
     if ((r = openfile_lookup(envid, req->req_fileid, &o)) < 0) {
         return r;
     }
